@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TQL.Utill.Singleton
+namespace TQL.Singleton
 {
     public abstract class SingletonBase
     {

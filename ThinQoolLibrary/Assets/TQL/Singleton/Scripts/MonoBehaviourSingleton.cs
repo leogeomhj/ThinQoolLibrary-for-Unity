@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TQL.Utill.Singleton
+namespace TQL.Singleton
 {
     public class MonoBehaviourSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
@@ -53,7 +53,7 @@ namespace TQL.Utill.Singleton
 
         private bool isDestroySingleton = true;
 
-        protected virtual void Awake()
+        private void Awake()
         {
             useGUILayout = false;
 
@@ -85,7 +85,7 @@ namespace TQL.Utill.Singleton
         {
             GameObject cacheGameObject = gameObject;
 
-            cacheGameObject.name = "(singleton)" + typeof(T).ToString();
+            cacheGameObject.name = "(singleton)" + typeof(T).Name;
 
             DontDestroyOnLoad(cacheGameObject);
         }
