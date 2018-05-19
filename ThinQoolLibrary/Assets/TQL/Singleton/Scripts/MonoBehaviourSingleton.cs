@@ -81,6 +81,13 @@ namespace TQL.Singleton
             }
         }
 
+#if !UNITY_2018_1_OR_NEWER
+        protected virtual void OnApplicationQuit()
+        {
+            MonoBehaviourSingletonManager.OnQuitting();
+        }
+#endif
+
         protected virtual void InitializeSingleton()
         {
             GameObject cacheGameObject = gameObject;
@@ -90,17 +97,15 @@ namespace TQL.Singleton
             DontDestroyOnLoad(cacheGameObject);
         }
 
-#if !UNITY_2018_1_OR_NEWER
-        protected virtual void OnApplicationQuit()
+        public virtual void Initialize()
         {
-            MonoBehaviourSingletonManager.OnQuitting();
         }
-#endif
     }
 
     public static class MonoBehaviourSingletonManager
     {
         private static Dictionary<Type, GameObject> _singletons = new Dictionary<Type, GameObject>();
+        private static List<Type> _dontDestroySingletons = new List<Type>();
 
         internal static void Add(Type type, GameObject gameObject)
         {
@@ -130,17 +135,30 @@ namespace TQL.Singleton
 
         public static void DontDestroySingleton(Type type)
         {
-            Remove(type);
+            if (_dontDestroySingletons.Contains(type) == false)
+            {
+                _dontDestroySingletons.Add(type);
+            }
         }
 
         public static void DestroyAll()
         {
-            var etor = _singletons.GetEnumerator();
+            List<Type> list = new List<Type>(_singletons.Keys);
+
+            var etor = list.GetEnumerator();
             while (etor.MoveNext())
             {
-                GameObject.Destroy(etor.Current.Value);
+                if (_dontDestroySingletons.Contains(etor.Current) == false)
+                {
+                    GameObject.Destroy(_singletons[etor.Current]);
+                    _singletons.Remove(etor.Current);
+                }
+                else
+                {
+                    MonoBehaviour singleton = _singletons[etor.Current].GetComponent(etor.Current) as MonoBehaviour;
+                    singleton.Invoke("Initialize", 0f);
+                }
             }
-            _singletons.Clear();
         }
 
         public static bool IsQuitting { get; private set; }

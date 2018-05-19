@@ -6,6 +6,7 @@ namespace TQL.Singleton
     public abstract class SingletonBase
     {
         public abstract void DestroySingleton();
+        public abstract void Initialize();
     }
 
     public class Singleton<T> : SingletonBase where T : SingletonBase, new()
@@ -50,11 +51,16 @@ namespace TQL.Singleton
 
             instance = null;
         }
+
+        public override void Initialize()
+        {
+        }
     }
 
     public static class SingletonManager
     {
         private static Dictionary<Type, SingletonBase> _singletons = new Dictionary<Type, SingletonBase>();
+        private static List<Type> _dontDestroySingletons = new List<Type>();
 
         internal static void Add(Type type, SingletonBase singleton)
         {
@@ -84,19 +90,28 @@ namespace TQL.Singleton
 
         public static void DontDestroySingleton(Type type)
         {
-            Remove(type);
+            if (_dontDestroySingletons.Contains(type) == false)
+            {
+                _dontDestroySingletons.Add(type);
+            }
         }
 
         public static void DestroyAll()
         {
-            List<SingletonBase> list = new List<SingletonBase>(_singletons.Values);
+            List<Type> list = new List<Type>(_singletons.Keys);
 
             var etor = list.GetEnumerator();
             while (etor.MoveNext())
             {
-                etor.Current.DestroySingleton();
+                if (_dontDestroySingletons.Contains(etor.Current) == false)
+                {
+                    _singletons[etor.Current].DestroySingleton();
+                }
+                else
+                {
+                    _singletons[etor.Current].Initialize();
+                }
             }
-            _singletons.Clear();
         }
     }
 }
